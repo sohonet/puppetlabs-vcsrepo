@@ -250,6 +250,31 @@ vcsrepo { '/path/to/repo':
 }
 ~~~
 
+#### Important changes in version 5
+
+Prior to version 5.0.0 `StrictHostKeyChecking` was implicitly disabled when using the `identity` parameter. This meant that ssh would automatically add new hosts to `~/.ssh/known_hosts`, letting most connections succeed.
+
+`StrictHostKeyChecking` has now been removed from the options passed to ssh which will result in ssh falling back to it's default, `ask`. **This could cause puppet runs to fail**.
+
+To ensure a run completes successfully, you should add the hosts public key to the `known_hosts` before the `vcsrepo` resource is applied.
+
+You can usually get the public key of an ssh host by running `ssh-keyscan`. Adding the result to your `known_hosts` file may look similar to this:
+
+~~~ bash
+ssh-keyscan -t rsa github.com >> /home/me/.ssh/known_hosts
+~~~
+
+Once everything is configured, you can continue to manage your repositories with ssh.
+
+~~~ puppet
+vcsrepo { '/path/to/repo':
+  ensure   => latest,
+  provider => git,
+  source   => 'git@github.com:user/repo.git',
+  identity => '/home/me/.ssh/id_rsa',
+}
+~~~
+
 <a id="bazaar"></a>
 ### Bazaar
 
