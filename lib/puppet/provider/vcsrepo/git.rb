@@ -226,9 +226,14 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
   end
 
   def update_references
+    fetch_tags_args = ['fetch', '--tags']
+    git_ver = git_version
+    if Gem::Version.new(git_ver) >= Gem::Version.new('2.20.0')
+      fetch_tags_args.push('--force')
+    end
     at_path do
       git_with_identity('fetch', @resource.value(:remote))
-      git_with_identity('fetch', '--tags', @resource.value(:remote))
+      git_with_identity(*fetch_tags_args, @resource.value(:remote))
       update_owner_and_excludes
     end
   end
