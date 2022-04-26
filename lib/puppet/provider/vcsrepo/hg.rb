@@ -45,12 +45,10 @@ Puppet::Type.type(:vcsrepo).provide(:hg, parent: Puppet::Provider::Vcsrepo) do
 
   def latest
     at_path do
-      begin
-        hg_wrapper('incoming', '--branch', '.', '--newest-first', '--limit', '1', remote: true)[%r{^changeset:\s+(?:-?\d+):(\S+)}m, 1]
-      rescue Puppet::ExecutionFailure
-        # If there are no new changesets, return the current nodeid
-        revision
-      end
+      hg_wrapper('incoming', '--branch', '.', '--newest-first', '--limit', '1', remote: true)[%r{^changeset:\s+(?:-?\d+):(\S+)}m, 1]
+    rescue Puppet::ExecutionFailure
+      # If there are no new changesets, return the current nodeid
+      revision
     end
   end
 
