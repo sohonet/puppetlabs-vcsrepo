@@ -55,11 +55,9 @@ Puppet::Type.type(:vcsrepo).provide(:bzr, parent: Puppet::Provider::Vcsrepo) do
 
   def revision=(desired)
     at_path do
-      begin
-        bzr('update', '-r', desired)
-      rescue Puppet::ExecutionFailure
-        bzr('update', '-r', desired, ':parent')
-      end
+      bzr('update', '-r', desired)
+    rescue Puppet::ExecutionFailure
+      bzr('update', '-r', desired, ':parent')
     end
     update_owner
   end
