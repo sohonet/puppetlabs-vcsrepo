@@ -99,6 +99,8 @@ describe Puppet::Type.type(:vcsrepo).provider(:svn) do
                                                        *test_paths_parents)
         expect(provider).to receive(:svn_wrapper).with('--non-interactive', 'update',
                                                        *resource[:includes])
+
+        allow(provider).to receive(:return_svn_client_version).and_return('1.8.0')
         provider.create
       end
       it 'performs a sparse checkout at a specific revision' do
@@ -118,6 +120,8 @@ describe Puppet::Type.type(:vcsrepo).provider(:svn) do
         expect(provider).to receive(:svn_wrapper).with('--non-interactive', 'update', '-r',
                                                        resource.value(:revision),
                                                        *resource[:includes])
+
+        allow(provider).to receive(:return_svn_client_version).and_return('1.8.0')
         provider.create
       end
       it 'performs a sparse checkout with a specific depth' do
@@ -134,6 +138,8 @@ describe Puppet::Type.type(:vcsrepo).provider(:svn) do
         expect(provider).to receive(:svn_wrapper).with('--non-interactive', 'update',
                                                        '--depth', resource.value(:depth),
                                                        *resource[:includes])
+
+        allow(provider).to receive(:return_svn_client_version).and_return('1.8.0')
         provider.create
       end
       it 'performs a sparse checkout at a specific depth and revision' do
@@ -155,6 +161,8 @@ describe Puppet::Type.type(:vcsrepo).provider(:svn) do
                                                        '-r', resource.value(:revision),
                                                        '--depth', resource.value(:depth),
                                                        *resource[:includes])
+
+        allow(provider).to receive(:return_svn_client_version).and_return('1.8.0')
         provider.create
       end
     end
