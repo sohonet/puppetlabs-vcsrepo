@@ -507,8 +507,9 @@ BRANCHES
     it "uses 'git fetch --tags'" do
       resource.delete(:source)
       expect_chdir
+      expect(provider).to receive(:exec_git).with('--version').and_return('2.36.1')
       expect(provider).to receive(:exec_git).with('fetch', 'origin')
-      expect(provider).to receive(:exec_git).with('fetch', '--tags', 'origin')
+      expect(provider).to receive(:exec_git).with('fetch', '--tags', '--force', 'origin')
       provider.update_references
     end
   end
@@ -562,6 +563,8 @@ BRANCHES
       expect(FileUtils).to receive(:chown_R).with('john', nil, '/tmp/test')
       expect(provider).to receive(:exec_git).with('fetch', 'origin')
       expect(provider).to receive(:exec_git).with('fetch', '--tags', 'origin')
+
+      allow(provider).to receive(:exec_git).with('--version').and_return('2.13.0')
       provider.update_references
     end
     it 'with excludes run filtered chown_R' do
@@ -574,6 +577,8 @@ BRANCHES
       expect(provider).to receive(:set_excludes)
       expect(provider).to receive(:exec_git).with('fetch', 'origin')
       expect(provider).to receive(:exec_git).with('fetch', '--tags', 'origin')
+
+      allow(provider).to receive(:exec_git).with('--version').and_return('2.13.0')
       provider.update_references
     end
   end
