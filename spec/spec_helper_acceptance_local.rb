@@ -7,6 +7,21 @@ class LitmusHelper
   include PuppetLitmus
 end
 
+def tmpdir
+  '/tmp/vcsrepo'
+end
+
+def project_root
+  File.expand_path(File.join(File.dirname(__FILE__)))
+end
+
+def create_repo
+  LitmusHelper.instance.run_shell("rm -rf #{tmpdir}")
+  LitmusHelper.instance.run_shell("mkdir -p #{tmpdir}")
+  LitmusHelper.instance.bolt_upload_file("#{project_root}/acceptance/files/create_git_repo.sh", "#{tmpdir}/create_git_repo.sh")
+  LitmusHelper.instance.run_shell("cd #{tmpdir} && ./create_git_repo.sh")
+end
+
 RSpec.configure do |c|
   # Readable test descriptions
   c.formatter = :documentation

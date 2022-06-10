@@ -2,8 +2,6 @@
 
 require 'spec_helper_acceptance'
 
-tmpdir = '/tmp/vcsrepo'
-
 describe 'clones a remote repo', unless: only_supports_weak_encryption do
   before(:all) do
     File.expand_path(File.join(File.dirname(__FILE__), '..'))

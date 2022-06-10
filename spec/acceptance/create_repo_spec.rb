@@ -2,8 +2,6 @@
 
 require 'spec_helper_acceptance'
 
-tmpdir = '/tmp/vcsrepo'
-
 describe 'create a repo' do
   context 'with without a source' do
     pp = <<-MANIFEST
