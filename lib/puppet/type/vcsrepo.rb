@@ -61,6 +61,9 @@ Puppet::Type.newtype(:vcsrepo) do
   feature :keep_local_changes,
           'The provider supports keeping local changes on files tracked by the repository when changing revision'
 
+  feature :safe_directory,
+          'The provider supports setting a safe directory. This will only be used for newer versions of git.'
+
   ensurable do
     desc 'Ensure the version control repository.'
     attr_accessor :latest
@@ -112,7 +115,9 @@ Puppet::Type.newtype(:vcsrepo) do
     end
 
     newvalue :absent do
-      provider.destroy
+      if provider.exists?
+        provider.destroy
+      end
     end
 
     newvalue :latest, required_features: [:reference_tracking] do
@@ -297,6 +302,12 @@ Puppet::Type.newtype(:vcsrepo) do
 
   newparam :keep_local_changes do
     desc 'Keep local changes on files tracked by the repository when changing revision'
+    newvalues(true, false)
+    defaultto :false
+  end
+
+  newparam :safe_directory, required_features: [:safe_directory] do
+    desc 'Marks the current directory specified by the path parameter as a safe directory.'
     newvalues(true, false)
     defaultto :false
   end
