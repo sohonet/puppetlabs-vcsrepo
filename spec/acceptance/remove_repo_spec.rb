@@ -2,8 +2,6 @@
 
 require 'spec_helper_acceptance'
 
-tmpdir = '/tmp/vcsrepo'
-
 describe 'remove a repo' do
   pp = <<-MANIFEST
     vcsrepo { "#{tmpdir}/testrepo_deleted":

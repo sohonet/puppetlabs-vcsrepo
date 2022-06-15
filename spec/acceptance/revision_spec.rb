@@ -2,14 +2,9 @@
 
 require 'spec_helper_acceptance'
 
-tmpdir = '/tmp/vcsrepo'
-
 describe 'changing revision' do
   before(:all) do
-    # Create testrepo.git
-    my_root = File.expand_path(File.join(File.dirname(__FILE__), '..'))
-    bolt_upload_file("#{my_root}/acceptance/files", tmpdir, 'create_git_repo.sh')
-    run_shell("cd #{tmpdir} && ./create_git_repo.sh")
+    create_repo
 
     # Configure testrepo.git as upstream of testrepo
     pp = <<-MANIFEST

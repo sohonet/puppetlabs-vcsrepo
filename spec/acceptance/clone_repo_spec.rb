@@ -2,14 +2,9 @@
 
 require 'spec_helper_acceptance'
 
-tmpdir = '/tmp/vcsrepo'
-
 describe 'clones a remote repo' do
   before(:all) do
-    my_root = File.expand_path(File.join(File.dirname(__FILE__), '..'))
-    run_shell("rm -rf #{tmpdir}")
-    bolt_upload_file("#{my_root}/acceptance/files", tmpdir, 'create_git_repo.sh')
-    run_shell("cd #{tmpdir} && ./create_git_repo.sh")
+    create_repo
   end
 
   after(:all) do
