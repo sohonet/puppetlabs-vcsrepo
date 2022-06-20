@@ -206,6 +206,31 @@ vcsrepo { '/path/to/repo':
 }
 ~~~
 
+To clone a HTTP repo through a proxy
+
+The vcsrepo resource doesn't support a proxy configuration. However, you can configure it directly via git.
+Create the following `~/.gitconfig` file:
+
+~~~
+[http]
+  proxy = http://proxy.internal:8181
+~~~
+
+Git will now automatically use this proxy for all repositories that are cloned via http/https:
+
+~~~ puppet
+vcsrepo { '/path/to/repo':
+  ensure   => present,
+  provider => git,
+  source   => 'https://example.com/repo.git',
+  revision => '0c466b8a5a45f6cd7de82c08df2fb4ce1e920a31',
+  user     => 'someUser',
+}
+~~~
+
+You can find more information about the proxy configuration [here](https://gist.github.com/evantoli/f8c23a37eb3558ab8765).
+It's also possible to configure it on a per-repository level.
+
 #### Use multiple remotes with a repository
 
 In place of a single string, you can set `source` to a hash of one or more name => URL pairs:
