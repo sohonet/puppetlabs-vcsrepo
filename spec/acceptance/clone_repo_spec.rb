@@ -9,6 +9,7 @@ describe 'clones a remote repo' do
 
   after(:all) do
     run_shell("rm -rf #{tmpdir}/testrepo")
+    run_shell("rm -rf #{tmpdir}/testrepo_owner")
     run_shell("rm -rf #{tmpdir}/testrepo_mirror_repo")
   end
 
@@ -225,6 +226,7 @@ describe 'clones a remote repo' do
         provider => git,
         source => "file://#{tmpdir}/testrepo.git",
         owner => 'vagrant',
+        safe_directory => true,
       }
     MANIFEST
     it 'clones a repo' do

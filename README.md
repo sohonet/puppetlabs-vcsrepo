@@ -39,7 +39,8 @@ The vcsrepo module provides a single type with providers to support the followin
 * [Subversion](#subversion)
 
 **Note:** `git` is the only vcs provider officially [supported by Puppet Inc.](https://forge.puppet.com/supported)
-**Note:** Release v4.0.1 has been removed from the Puppet Forge and was officially re-released as version v5.0.0 as it contained a breaking change. Details available [here](https://puppetlabs.github.io/iac/team/status/developer/2021/06/04/status-update.html)
+**Note:** Release v4.0.1 has been removed from the Puppet Forge and was officially re-released as version v5.0.0 as it contained a breaking change.
+Details available [here](https://puppetlabs.github.io/iac/team/status/developer/2021/06/04/status-update.html)
 
 <a id="setup"></a>
 ## Setup
@@ -812,6 +813,22 @@ Git is the only VCS provider officially [supported by Puppet Inc.](https://forge
 The includes parameter is only supported when SVN client version is >= 1.6.
 
 For an extensive list of supported operating systems, see [metadata.json](https://github.com/puppetlabs/puppetlabs-vcsrepo/blob/main/metadata.json)
+
+### Response to CVE-2022-24765
+
+The vulnerability described in this CVE could impact users working on multi-user machines.
+A malicious actor could create a `.git` directory above the current working directory causing all git invocations to occur outside of a repository to read its configuration.
+
+For a more in-depth description of this vulnerability, check out [this blog post](https://github.blog/2022-04-12-git-security-vulnerability-announced/).
+
+Fixes were released in Git versions 2.35.2 and 1:2.25.1-1ubuntu3.4 respectively.
+
+VCSRepo users were impacted when running newer versions of Git and managing repositories that were owned by a user or group that differed from the user executing Git.
+
+For example, setting the `owner` parameter on a resource would cause Puppet runs to fail with a `Path /destination/path exists and is not the desired repository.` error.
+
+Impacted users are now advised to use the new `safe_directory` parameter on Git resources.
+Explicitily setting the value to `true` will add the current path specified on the resource to the `safe.directory` git configuration for the current user (global scope) allowing the Puppet run to continue without error.
 
 <a id="development"></a> 
 ## Development

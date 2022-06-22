@@ -6,7 +6,7 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
   desc 'Supports Git repositories'
 
   has_features :bare_repositories, :reference_tracking, :ssh_identity, :multiple_remotes,
-               :user, :depth, :branch, :submodules
+               :user, :depth, :branch, :submodules, :safe_directory
 
   def create
     check_force
@@ -36,6 +36,7 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
   end
 
   def destroy
+    remove_safe_directory if safe_directories.include?(@resource.value(:path))
     FileUtils.rm_rf(@resource.value(:path))
   end
 
@@ -140,6 +141,7 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
   end
 
   def exists?
+    update_safe_directory
     working_copy_exists? || bare_exists?
   end
 
@@ -565,6 +567,52 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
   end
 
   # @!visibility private
+  def safe_directories
+    args = ['config', '--global', '--get-all', 'safe.directory']
+    begin
+      d = git_with_identity(*args) || ''
+      d.split('\n')
+       .reject { |v| v.empty? }
+       .map { |v| v.chomp }
+    rescue Puppet::ExecutionFailure
+      []
+    end
+  end
+
+  # @!visibility private
+  def update_safe_directory
+    # If the owner parameter is not set, then we don't need to do anything.
+    return unless @resource.value(:owner)
+
+    if should_add_safe_directory?
+      add_safe_directory
+    else
+      remove_safe_directory
+    end
+  end
+
+  # @!visibility private
+  def add_safe_directory
+    notice("Adding '#{@resource.value(:path)}' to safe directory list")
+    args = ['config', '--global', '--add', 'safe.directory', @resource.value(:path)]
+    git_with_identity(*args)
+  end
+
+  # @!visibility private
+  def remove_safe_directory
+    notice("Removing '#{@resource.value(:path)}' from safe directory list")
+    args = ['config', '--global', '--unset', 'safe.directory', @resource.value(:path)]
+    git_with_identity(*args)
+  end
+
+  # @!visibility private
+  def should_add_safe_directory?
+    (@resource.value(:owner) != @resource.value(:user)) && # user and owner should be different
+      @resource.value(:safe_directory) && # safe_directory should be true
+      !safe_directories.include?(@resource.value(:path)) # directory should not already be in the list
+  end
+
+  # @!visibility private
   def git_with_identity(*args)
     if @resource.value(:trust_server_cert) == :true
       git_ver = git_version
@@ -599,10 +647,13 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
 
   # Execute git with the given args, running it as the user specified.
   def exec_git(*args)
-    exec_args = { failonfail: true, combine: true }
+    exec_args = {
+      failonfail: true,
+      combine: true,
+      custom_environment: { 'HOME' => Dir.home },
+    }
     if @resource.value(:user) && @resource.value(:user) != Facter['id'].value
-      env = Etc.getpwnam(@resource.value(:user))
-      exec_args[:custom_environment] = { 'HOME' => env['dir'] }
+      exec_args[:custom_environment] = { 'HOME' => Dir.home(@resource.value(:user)) }
       exec_args[:uid] = @resource.value(:user)
     end
     Puppet::Util::Execution.execute([:git, args], **exec_args)
