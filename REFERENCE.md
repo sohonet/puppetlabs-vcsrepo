@@ -65,6 +65,7 @@ The following parameters are available in the `vcsrepo` type.
 * [`path`](#path)
 * [`provider`](#provider)
 * [`remote`](#remote)
+* [`safe_directory`](#safe_directory)
 * [`submodules`](#submodules)
 * [`trust_server_cert`](#trust_server_cert)
 * [`user`](#user)
@@ -157,6 +158,14 @@ discover the appropriate provider for your platform.
 The remote repository to track
 
 Default value: `origin`
+
+##### <a name="safe_directory"></a>`safe_directory`
+
+Valid values: ``true``, ``false``
+
+Marks the current directory specified by the path parameter as a safe directory.
+
+Default value: ``false``
 
 ##### <a name="submodules"></a>`submodules`
 
