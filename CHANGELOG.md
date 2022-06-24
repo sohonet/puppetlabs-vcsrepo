@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
 
+## [v5.1.0](https://github.com/puppetlabs/puppetlabs-vcsrepo/tree/v5.1.0) (2022-06-24)
+
+[Full Changelog](https://github.com/puppetlabs/puppetlabs-vcsrepo/compare/v5.0.0...v5.1.0)
+
+### Added
+
+- pdksync - \(IAC-1753\) - Add Support for AlmaLinux 8 [\#524](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/524) ([david22swan](https://github.com/david22swan))
+- pdksync - \(IAC-1751\) - Add Support for Rocky 8 [\#523](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/523) ([david22swan](https://github.com/david22swan))
+- pdksync - \(IAC-1709\) - Add Support for Debian 11 [\#521](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/521) ([david22swan](https://github.com/david22swan))
+
+### Fixed
+
+- \(GH-535\) Fix for safe directories [\#549](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/549) ([chelnak](https://github.com/chelnak))
+- pdksync - \(GH-iac-334\) Remove Support for Ubuntu 14.04/16.04 [\#529](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/529) ([david22swan](https://github.com/david22swan))
+- MODULES-11050 - Force fetch tags [\#527](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/527) ([sp-ricard-valverde](https://github.com/sp-ricard-valverde))
+- pdksync - \(IAC-1787\) Remove Support for CentOS 6 [\#525](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/525) ([david22swan](https://github.com/david22swan))
+- pdksync - \(IAC-1598\) - Remove Support for Debian 8 [\#522](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/522) ([david22swan](https://github.com/david22swan))
+
 ## [v5.0.0](https://github.com/puppetlabs/puppetlabs-vcsrepo/tree/v5.0.0) (2021-06-02)
 
 [Full Changelog](https://github.com/puppetlabs/puppetlabs-vcsrepo/compare/v4.0.0...v5.0.0)
