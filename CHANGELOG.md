@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
 
+## [v5.2.0](https://github.com/puppetlabs/puppetlabs-vcsrepo/tree/v5.2.0) (2022-06-30)
+
+[Full Changelog](https://github.com/puppetlabs/puppetlabs-vcsrepo/compare/v5.1.0...v5.2.0)
+
+### Added
+
+- pdksync - \(GH-cat-12\) Add Support for Redhat 9 [\#543](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/543) ([david22swan](https://github.com/david22swan))
+
+### Fixed
+
+- \(GH-552\) Fix home directory evaluation [\#553](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/553) ([chelnak](https://github.com/chelnak))
+
 ## [v5.1.0](https://github.com/puppetlabs/puppetlabs-vcsrepo/tree/v5.1.0) (2022-06-24)
 
 [Full Changelog](https://github.com/puppetlabs/puppetlabs-vcsrepo/compare/v5.0.0...v5.1.0)
