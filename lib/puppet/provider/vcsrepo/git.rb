@@ -6,7 +6,7 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
   desc 'Supports Git repositories'
 
   has_features :bare_repositories, :reference_tracking, :ssh_identity, :multiple_remotes,
-               :user, :depth, :branch, :submodules, :safe_directory
+               :user, :depth, :branch, :submodules, :safe_directory, :hooks_allowed
 
   def create
     check_force
@@ -312,6 +312,32 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
       else
         @resource.value(:source).each_key do |remote|
           exec_git('config', '--unset', "remote.#{remote}.mirror")
+        rescue Puppet::ExecutionFailure
+          next
+        end
+      end
+    end
+  end
+
+  def skip_hooks
+    at_path do
+      return git_with_identity('config', '--local', '--get', '--default', 'none', 'core.hooksPath').chomp == '/dev/null'
+    end
+  end
+
+  def skip_hooks=(desired)
+    set_skip_hooks(desired)
+  end
+
+  def set_skip_hooks(desired)
+
+    current = skip_hooks
+    at_path do
+      if desired == true && current == false
+        exec_git('config', '--local', 'core.hooksPath', '/dev/null')
+      elsif desired == false && current == true
+        begin
+          exec_git('config', '--local', '--unset', 'core.hooksPath')
         rescue Puppet::ExecutionFailure
           next
         end
