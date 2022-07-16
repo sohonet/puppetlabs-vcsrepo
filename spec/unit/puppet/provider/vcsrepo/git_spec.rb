@@ -595,4 +595,72 @@ BRANCHES
       provider.update_references
     end
   end
+
+  describe 'set_skip_hooks' do
+    before :each do
+      expect_chdir('/tmp/test')
+    end
+
+    context 'when true' do
+      before :each do
+        resource[:skip_hooks] = true
+      end
+
+      context 'when core.hooksPath not defined' do
+        it 'should define core.hooksPath null' do
+          expect(provider).to receive(:exec_git)
+                                .with('config', '--local', '--get', '--default', 'none', 'core.hooksPath').and_return('none')
+          expect(provider).to receive(:exec_git).with('config', '--local', 'core.hooksPath', '/dev/null')
+          provider.set_skip_hooks(resource.value(:skip_hooks))
+        end
+      end
+      context 'when core.hooksPath defined not null' do
+        it 'should define core.hooksPath null' do
+          expect(provider).to receive(:exec_git)
+                                .with('config', '--local', '--get', '--default', 'none', 'core.hooksPath').and_return('/some/path')
+          expect(provider).to receive(:exec_git).with('config', '--local', 'core.hooksPath', '/dev/null')
+          provider.set_skip_hooks(resource.value(:skip_hooks))
+        end
+      end
+      context 'when core.hooksPath defined null' do
+        it 'should not modify the config' do
+          expect(provider).to receive(:exec_git)
+                                .with('config', '--local', '--get', '--default', 'none', 'core.hooksPath').and_return('/dev/null')
+          expect(provider).not_to receive(:exec_git).with('config', '--local', 'core.hooksPath', '/dev/null')
+          provider.set_skip_hooks(resource.value(:skip_hooks))
+        end
+      end
+    end
+
+    context 'when false' do
+      before :each do
+        resource[:skip_hooks] = false
+      end
+
+      context 'when core.hooksPath not defined' do
+        it 'should not modify the config' do
+          expect(provider).to receive(:exec_git)
+                                .with('config', '--local', '--get', '--default', 'none', 'core.hooksPath').and_return('none')
+          expect(provider).not_to receive(:exec_git).with('config', '--local', '--unset', 'core.hooksPath')
+          provider.set_skip_hooks(resource.value(:skip_hooks))
+        end
+      end
+      context 'when core.hooksPath defined not null' do
+        it 'should not modify the config' do
+          expect(provider).to receive(:exec_git)
+                                .with('config', '--local', '--get', '--default', 'none', 'core.hooksPath').and_return('/some/path')
+          expect(provider).not_to receive(:exec_git).with('config', '--local', '--unset', 'core.hooksPath')
+          provider.set_skip_hooks(resource.value(:skip_hooks))
+        end
+      end
+      context 'when core.hooksPath defined null' do
+        it 'should unset core.hooksPath' do
+          expect(provider).to receive(:exec_git)
+                                .with('config', '--local', '--get', '--default', 'none', 'core.hooksPath').and_return('/dev/null')
+          expect(provider).to receive(:exec_git).with('config', '--local', '--unset', 'core.hooksPath')
+          provider.set_skip_hooks(resource.value(:skip_hooks))
+        end
+      end
+    end
+  end
 end
