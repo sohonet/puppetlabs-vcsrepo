@@ -64,6 +64,9 @@ Puppet::Type.newtype(:vcsrepo) do
   feature :safe_directory,
           'The provider supports setting a safe directory. This will only be used for newer versions of git.'
 
+  feature :hooks_allowed,
+          'The provider supports managing hooks for the repository operations.'
+
   ensurable do
     desc 'Ensure the version control repository.'
     attr_accessor :latest
@@ -310,6 +313,12 @@ Puppet::Type.newtype(:vcsrepo) do
     desc 'Marks the current directory specified by the path parameter as a safe directory.'
     newvalues(true, false)
     defaultto :false
+  end
+
+  newproperty :skip_hooks, parent: Puppet::Property::Boolean, required_features: [:hooks_allowed] do
+    desc 'Explicitly skip any global hooks for this repository.'
+    newvalues(true, false)
+    defaultto false
   end
 
   autorequire(:package) do
