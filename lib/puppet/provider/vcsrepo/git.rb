@@ -19,10 +19,12 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
       end
 
       init_repository
+      set_skip_hooks @resource.value(:skip_hooks)
     else
       clone_repository(default_url, @resource.value(:path))
       update_remotes(@resource.value(:source))
       set_mirror if @resource.value(:ensure) == :mirror && @resource.value(:source).is_a?(Hash)
+      set_skip_hooks @resource.value(:skip_hooks)
 
       if @resource.value(:revision)
         checkout
@@ -685,4 +687,5 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
     end
     Puppet::Util::Execution.execute([:git, args], **exec_args)
   end
+
 end
