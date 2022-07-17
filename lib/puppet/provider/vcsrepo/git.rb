@@ -332,7 +332,6 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
   end
 
   def set_skip_hooks(desired)
-
     current = skip_hooks
     at_path do
       if desired == true && current == false
@@ -687,5 +686,4 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
     end
     Puppet::Util::Execution.execute([:git, args], **exec_args)
   end
-
 end
