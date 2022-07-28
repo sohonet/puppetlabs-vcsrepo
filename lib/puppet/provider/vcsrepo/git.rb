@@ -332,11 +332,8 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
       rescue Puppet::ExecutionFailure
         return :false
       end
-      if d.chomp == '/dev/null'
-        return :true
-      else
-        return :false
-      end
+      return :true if d.chomp == '/dev/null'
+      :false
     end
   end
 
