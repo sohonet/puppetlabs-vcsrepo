@@ -19,12 +19,16 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
       end
 
       init_repository
-      set_skip_hooks @resource.value(:skip_hooks)
+      unless @resource.value(:skip_hooks).nil?
+        self.skip_hooks = @resource.value(:skip_hooks)
+      end
     else
       clone_repository(default_url, @resource.value(:path))
       update_remotes(@resource.value(:source))
       set_mirror if @resource.value(:ensure) == :mirror && @resource.value(:source).is_a?(Hash)
-      set_skip_hooks @resource.value(:skip_hooks)
+      unless @resource.value(:skip_hooks).nil?
+        self.skip_hooks = @resource.value(:skip_hooks)
+      end
 
       if @resource.value(:revision)
         checkout
@@ -323,20 +327,24 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
 
   def skip_hooks
     at_path do
-      return git_with_identity('config', '--local', '--get', '--default', 'none', 'core.hooksPath').chomp == '/dev/null'
+      begin
+        d = git_with_identity('config', '--local', '--get', 'core.hooksPath')
+      rescue Puppet::ExecutionFailure
+        return :false
+      end
+      if d.chomp == '/dev/null'
+        return :true
+      else
+        return :false
+      end
     end
   end
 
   def skip_hooks=(desired)
-    set_skip_hooks(desired)
-  end
-
-  def set_skip_hooks(desired)
-    current = skip_hooks
     at_path do
-      if desired == true && current == false
+      if desired == :true
         exec_git('config', '--local', 'core.hooksPath', '/dev/null')
-      elsif desired == false && current == true
+      elsif desired == :false
         begin
           exec_git('config', '--local', '--unset', 'core.hooksPath')
         rescue Puppet::ExecutionFailure

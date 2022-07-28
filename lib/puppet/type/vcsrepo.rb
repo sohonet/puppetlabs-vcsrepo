@@ -315,10 +315,9 @@ Puppet::Type.newtype(:vcsrepo) do
     defaultto :false
   end
 
-  newproperty :skip_hooks, parent: Puppet::Property::Boolean, required_features: [:hooks_allowed] do
+  newproperty :skip_hooks, required_features: [:hooks_allowed] do
     desc 'Explicitly skip any global hooks for this repository.'
-    newvalues(true, false)
-    defaultto false
+    newvalues(:true, :false)
   end
 
   autorequire(:package) do
