@@ -40,7 +40,6 @@ BRANCHES
         expect(provider).to receive(:update_remote_url).with('origin', resource.value(:source)).and_return false
         expect(provider).to receive(:exec_git).with('branch', '--no-color', '-a').and_return(branch_a_list(resource.value(:revision)))
         expect(provider).to receive(:exec_git).with('checkout', '--force', resource.value(:revision))
-        expect(provider).to receive(:set_skip_hooks)
         provider.create
       end
     end
@@ -55,7 +54,6 @@ BRANCHES
         expect(provider).to receive(:update_remote_url).with('not_origin', resource.value(:source)).and_return false
         expect(provider).to receive(:exec_git).with('branch', '--no-color', '-a').and_return(branch_a_list(resource.value(:revision)))
         expect(provider).to receive(:exec_git).with('checkout', '--force', resource.value(:revision))
-        expect(provider).to receive(:set_skip_hooks)
         provider.create
       end
     end
@@ -71,7 +69,6 @@ BRANCHES
         expect(provider).to receive(:update_remote_url).with('origin', resource.value(:source)).and_return false
         expect(provider).to receive(:exec_git).with('branch', '--no-color', '-a').and_return(branch_a_list(resource.value(:revision)))
         expect(provider).to receive(:exec_git).with('checkout', '--force', resource.value(:revision))
-        expect(provider).to receive(:set_skip_hooks)
         provider.create
       end
     end
@@ -86,7 +83,6 @@ BRANCHES
         expect(provider).to receive(:update_remote_url).with('origin', resource.value(:source)).and_return false
         expect(provider).to receive(:exec_git).with('branch', '--no-color', '-a').and_return(branch_a_list(resource.value(:revision)))
         expect(provider).to receive(:exec_git).with('checkout', '--force', resource.value(:revision))
-        expect(provider).to receive(:set_skip_hooks)
         provider.create
       end
 
@@ -95,7 +91,6 @@ BRANCHES
         expect(provider).to receive(:exec_git).with('clone', resource.value(:source), resource.value(:path))
         expect(provider).to receive(:update_submodules)
         expect(provider).to receive(:update_remotes)
-        expect(provider).to receive(:set_skip_hooks)
         provider.create
       end
     end
@@ -108,7 +103,6 @@ BRANCHES
         expect_chdir
         expect_directory?(false)
         expect(provider).to receive(:exec_git).with('init')
-        expect(provider).to receive(:set_skip_hooks)
         provider.create
       end
     end
@@ -133,7 +127,6 @@ BRANCHES
         resource.delete(:revision)
         expect(provider).to receive(:exec_git).with('clone', '--bare', resource.value(:source), resource.value(:path))
         expect(provider).to receive(:update_remotes)
-        expect(provider).to receive(:set_skip_hooks)
         provider.create
       end
     end
@@ -147,7 +140,6 @@ BRANCHES
         expect_mkdir
         expect_directory?(false)
         expect(provider).to receive(:exec_git).with('init', '--bare')
-        expect(provider).to receive(:set_skip_hooks)
         provider.create
       end
     end
@@ -164,7 +156,6 @@ BRANCHES
         resource.delete(:revision)
         expect(provider).to receive(:exec_git).with('clone', '--mirror', resource.value(:source), resource.value(:path))
         expect(provider).to receive(:update_remotes)
-        expect(provider).to receive(:set_skip_hooks)
         provider.create
       end
     end
@@ -189,7 +180,6 @@ BRANCHES
         expect_chdir
         expect(provider).to receive(:exec_git).with('config', 'remote.origin.mirror', 'true')
         expect(provider).to receive(:exec_git).with('config', 'remote.other.mirror', 'true')
-        expect(provider).to receive(:set_skip_hooks)
         provider.create
       end
     end
@@ -209,7 +199,6 @@ BRANCHES
       expect(provider).to receive(:update_remote_url).with('origin', resource.value(:source)).and_return false
       expect(provider).to receive(:exec_git).with('branch', '--no-color', '-a').and_return(branch_a_list(resource.value(:revision)))
       expect(provider).to receive(:exec_git).with('checkout', '--force', resource.value(:revision))
-      expect(provider).to receive(:set_skip_hooks)
       provider.create
     end
   end
@@ -562,7 +551,6 @@ BRANCHES
         expect(provider).to receive(:update_remote_url).with('origin', resource.value(:source)).and_return false
         expect(provider).to receive(:exec_git).with('-c', 'http.sslVerify=false', 'branch', '--no-color', '-a').and_return(branch_a_list(resource.value(:revision)))
         expect(provider).to receive(:exec_git).with('-c', 'http.sslVerify=false', 'checkout', '--force', resource.value(:revision))
-        expect(provider).to receive(:set_skip_hooks)
 
         allow(provider).to receive(:exec_git).with('--version').and_return '2.13.0'
         expect { provider.create }.not_to raise_error
@@ -596,7 +584,7 @@ BRANCHES
     end
   end
 
-  describe 'set_skip_hooks' do
+  describe 'skip_hooks' do
     before :each do
       expect_chdir('/tmp/test')
     end
@@ -608,26 +596,14 @@ BRANCHES
 
       context 'when core.hooksPath not defined' do
         it 'defines core.hooksPath null' do
-          expect(provider).to receive(:exec_git)
-            .with('config', '--local', '--get', '--default', 'none', 'core.hooksPath').and_return('none')
           expect(provider).to receive(:exec_git).with('config', '--local', 'core.hooksPath', '/dev/null')
-          provider.set_skip_hooks(resource.value(:skip_hooks))
+          provider.skip_hooks = resource.value(:skip_hooks)
         end
       end
       context 'when core.hooksPath defined not null' do
         it 'defines core.hooksPath null' do
-          expect(provider).to receive(:exec_git)
-            .with('config', '--local', '--get', '--default', 'none', 'core.hooksPath').and_return('/some/path')
           expect(provider).to receive(:exec_git).with('config', '--local', 'core.hooksPath', '/dev/null')
-          provider.set_skip_hooks(resource.value(:skip_hooks))
-        end
-      end
-      context 'when core.hooksPath defined null' do
-        it 'does not modify the config' do
-          expect(provider).to receive(:exec_git)
-            .with('config', '--local', '--get', '--default', 'none', 'core.hooksPath').and_return('/dev/null')
-          expect(provider).not_to receive(:exec_git).with('config', '--local', 'core.hooksPath', '/dev/null')
-          provider.set_skip_hooks(resource.value(:skip_hooks))
+          provider.skip_hooks = resource.value(:skip_hooks)
         end
       end
     end
@@ -637,28 +613,10 @@ BRANCHES
         resource[:skip_hooks] = false
       end
 
-      context 'when core.hooksPath not defined' do
-        it 'does not modify the config' do
-          expect(provider).to receive(:exec_git)
-            .with('config', '--local', '--get', '--default', 'none', 'core.hooksPath').and_return('none')
-          expect(provider).not_to receive(:exec_git).with('config', '--local', '--unset', 'core.hooksPath')
-          provider.set_skip_hooks(resource.value(:skip_hooks))
-        end
-      end
-      context 'when core.hooksPath defined not null' do
-        it 'does not modify the config' do
-          expect(provider).to receive(:exec_git)
-            .with('config', '--local', '--get', '--default', 'none', 'core.hooksPath').and_return('/some/path')
-          expect(provider).not_to receive(:exec_git).with('config', '--local', '--unset', 'core.hooksPath')
-          provider.set_skip_hooks(resource.value(:skip_hooks))
-        end
-      end
       context 'when core.hooksPath defined null' do
         it 'unsets core.hooksPath' do
-          expect(provider).to receive(:exec_git)
-            .with('config', '--local', '--get', '--default', 'none', 'core.hooksPath').and_return('/dev/null')
           expect(provider).to receive(:exec_git).with('config', '--local', '--unset', 'core.hooksPath')
-          provider.set_skip_hooks(resource.value(:skip_hooks))
+          provider.skip_hooks = resource.value(:skip_hooks)
         end
       end
     end
