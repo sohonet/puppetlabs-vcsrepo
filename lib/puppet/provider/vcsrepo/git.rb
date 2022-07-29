@@ -326,9 +326,14 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
   end
 
   def skip_hooks
+    git_ver = git_version
+    config_args = ['config']
+    if Gem::Version.new(git_ver) >= Gem::Version.new('1.7.4')
+      config_args.push('--local')
+    end
     at_path do
       begin
-        d = git_with_identity('config', '--local', '--get', 'core.hooksPath')
+        d = git_with_identity(*config_args, '--get', 'core.hooksPath')
       rescue Puppet::ExecutionFailure
         return :false
       end
@@ -338,12 +343,17 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
   end
 
   def skip_hooks=(desired)
+    git_ver = git_version
+    config_args = ['config']
+    if Gem::Version.new(git_ver) >= Gem::Version.new('1.7.4')
+      config_args.push('--local')
+    end
     at_path do
       if desired == :true
-        exec_git('config', '--local', 'core.hooksPath', '/dev/null')
+        exec_git(*config_args, 'core.hooksPath', '/dev/null')
       elsif desired == :false
         begin
-          exec_git('config', '--local', '--unset', 'core.hooksPath')
+          exec_git(*config_args, '--unset', 'core.hooksPath')
         rescue Puppet::ExecutionFailure
           next
         end
