@@ -577,7 +577,7 @@ describe 'clones a remote repo' do
 
       it 'clones a repo' do
         # Run it twice and test for idempotency
-        idempotent_apply(pp, debug: true)
+        idempotent_apply(pp)
       end
 
       describe file("#{tmpdir}/testrepo_skip_hooks/.git/config") do
@@ -590,7 +590,7 @@ describe 'clones a remote repo' do
 
       it 'clones a repo' do
         # Run it twice and test for idempotency
-        idempotent_apply(pp, debug: true)
+        idempotent_apply(pp)
       end
 
       describe file("#{tmpdir}/testrepo_skip_hooks/.git/config") do
