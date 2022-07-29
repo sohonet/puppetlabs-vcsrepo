@@ -587,6 +587,7 @@ BRANCHES
   describe 'skip_hooks' do
     before :each do
       expect_chdir('/tmp/test')
+      expect(provider).to receive(:exec_git).with('--version').and_return('1.7.4')
     end
 
     context 'when true' do
