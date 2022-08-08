@@ -561,4 +561,41 @@ describe 'clones a remote repo' do
       it { is_expected.to contain 'ref: refs/heads/main' }
     end
   end
+
+  context 'with skip hooks' do
+    pp_template = <<-MANIFEST
+      vcsrepo { "#{tmpdir}/testrepo_skip_hooks":
+        ensure => present,
+        provider => git,
+        source => "file://#{tmpdir}/testrepo.git",
+        skip_hooks => %s,
+      }
+    MANIFEST
+
+    context 'when true' do
+      pp = pp_template % :true
+
+      it 'clones a repo' do
+        # Run it twice and test for idempotency
+        idempotent_apply(pp)
+      end
+
+      describe file("#{tmpdir}/testrepo_skip_hooks/.git/config") do
+        it { is_expected.to contain 'hooksPath = /dev/null' }
+      end
+    end
+
+    context 'when false' do
+      pp = pp_template % :false
+
+      it 'clones a repo' do
+        # Run it twice and test for idempotency
+        idempotent_apply(pp)
+      end
+
+      describe file("#{tmpdir}/testrepo_skip_hooks/.git/config") do
+        it { is_expected.not_to contain 'hooksPath' }
+      end
+    end
+  end
 end

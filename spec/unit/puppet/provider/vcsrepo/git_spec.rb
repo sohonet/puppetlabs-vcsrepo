@@ -583,4 +583,43 @@ BRANCHES
       provider.update_references
     end
   end
+
+  describe 'skip_hooks' do
+    before :each do
+      expect_chdir('/tmp/test')
+      expect(provider).to receive(:exec_git).with('--version').and_return('1.7.4')
+    end
+
+    context 'when true' do
+      before :each do
+        resource[:skip_hooks] = true
+      end
+
+      context 'when core.hooksPath not defined' do
+        it 'defines core.hooksPath null' do
+          expect(provider).to receive(:exec_git).with('config', '--local', 'core.hooksPath', '/dev/null')
+          provider.skip_hooks = resource.value(:skip_hooks)
+        end
+      end
+      context 'when core.hooksPath defined not null' do
+        it 'defines core.hooksPath null' do
+          expect(provider).to receive(:exec_git).with('config', '--local', 'core.hooksPath', '/dev/null')
+          provider.skip_hooks = resource.value(:skip_hooks)
+        end
+      end
+    end
+
+    context 'when false' do
+      before :each do
+        resource[:skip_hooks] = false
+      end
+
+      context 'when core.hooksPath defined null' do
+        it 'unsets core.hooksPath' do
+          expect(provider).to receive(:exec_git).with('config', '--local', '--unset', 'core.hooksPath')
+          provider.skip_hooks = resource.value(:skip_hooks)
+        end
+      end
+    end
+  end
 end

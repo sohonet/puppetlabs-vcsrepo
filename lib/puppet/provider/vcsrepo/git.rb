@@ -6,7 +6,7 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
   desc 'Supports Git repositories'
 
   has_features :bare_repositories, :reference_tracking, :ssh_identity, :multiple_remotes,
-               :user, :depth, :branch, :submodules, :safe_directory
+               :user, :depth, :branch, :submodules, :safe_directory, :hooks_allowed
 
   def create
     check_force
@@ -19,10 +19,16 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
       end
 
       init_repository
+      unless @resource.value(:skip_hooks).nil?
+        self.skip_hooks = @resource.value(:skip_hooks)
+      end
     else
       clone_repository(default_url, @resource.value(:path))
       update_remotes(@resource.value(:source))
       set_mirror if @resource.value(:ensure) == :mirror && @resource.value(:source).is_a?(Hash)
+      unless @resource.value(:skip_hooks).nil?
+        self.skip_hooks = @resource.value(:skip_hooks)
+      end
 
       if @resource.value(:revision)
         checkout
@@ -312,6 +318,42 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
       else
         @resource.value(:source).each_key do |remote|
           exec_git('config', '--unset', "remote.#{remote}.mirror")
+        rescue Puppet::ExecutionFailure
+          next
+        end
+      end
+    end
+  end
+
+  def skip_hooks
+    git_ver = git_version
+    config_args = ['config']
+    if Gem::Version.new(git_ver) >= Gem::Version.new('1.7.4')
+      config_args.push('--local')
+    end
+    at_path do
+      begin
+        d = git_with_identity(*config_args, '--get', 'core.hooksPath')
+      rescue Puppet::ExecutionFailure
+        return :false
+      end
+      return :true if d.chomp == '/dev/null'
+      :false
+    end
+  end
+
+  def skip_hooks=(desired)
+    git_ver = git_version
+    config_args = ['config']
+    if Gem::Version.new(git_ver) >= Gem::Version.new('1.7.4')
+      config_args.push('--local')
+    end
+    at_path do
+      if desired == :true
+        exec_git(*config_args, 'core.hooksPath', '/dev/null')
+      elsif desired == :false
+        begin
+          exec_git(*config_args, '--unset', 'core.hooksPath')
         rescue Puppet::ExecutionFailure
           next
         end
