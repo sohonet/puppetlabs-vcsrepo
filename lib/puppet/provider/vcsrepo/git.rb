@@ -642,11 +642,11 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
 
   # @!visibility private
   def remove_safe_directory
-    if safe_directories.include?(@resource.value(:path))
-      notice("Removing '#{@resource.value(:path)}' from safe directory list")
-      args = ['config', '--global', '--unset', 'safe.directory', @resource.value(:path)]
-      git_with_identity(*args)
-    end
+    return if safe_directories.include?(@resource.value(:path))
+
+    notice("Removing '#{@resource.value(:path)}' from safe directory list")
+    args = ['config', '--global', '--unset', 'safe.directory', @resource.value(:path)]
+    git_with_identity(*args)
   end
 
   # @!visibility private
