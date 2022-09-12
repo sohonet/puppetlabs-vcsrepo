@@ -42,7 +42,7 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
   end
 
   def destroy
-    remove_safe_directory if safe_directories.include?(@resource.value(:path))
+    remove_safe_directory
     FileUtils.rm_rf(@resource.value(:path))
   end
 
@@ -167,7 +167,7 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
       git_with_identity('remote', 'add', remote_name, remote_url)
       true
 
-    # If remote exists, but URL doesn't match, update URL
+      # If remote exists, but URL doesn't match, update URL
     elsif !current.include? "remote.#{remote_name}.url=#{remote_url}"
       git_with_identity('remote', 'set-url', remote_name, remote_url)
       true
@@ -642,6 +642,8 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
 
   # @!visibility private
   def remove_safe_directory
+    return unless safe_directories.include?(@resource.value(:path))
+
     notice("Removing '#{@resource.value(:path)}' from safe directory list")
     args = ['config', '--global', '--unset', 'safe.directory', @resource.value(:path)]
     git_with_identity(*args)
