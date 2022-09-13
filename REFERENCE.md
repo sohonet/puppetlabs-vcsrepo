@@ -38,6 +38,12 @@ Valid values: `%r{^\S+$}`
 
 The revision of the repository
 
+##### `skip_hooks`
+
+Valid values: ``true``, ``false``
+
+Explicitly skip any global hooks for this repository.
+
 ##### `source`
 
 The source URI for the repository

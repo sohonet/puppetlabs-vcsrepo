@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
 
+## [v5.3.0](https://github.com/puppetlabs/puppetlabs-vcsrepo/tree/v5.3.0) (2022-09-13)
+
+[Full Changelog](https://github.com/puppetlabs/puppetlabs-vcsrepo/compare/v5.2.0...v5.3.0)
+
+### Added
+
+- pdksync - \(GH-cat-11\) Certify Support for Ubuntu 22.04 [\#563](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/563) ([david22swan](https://github.com/david22swan))
+- Add skip\_hooks property to vcsrepo  [\#557](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/557) ([sp-ricard-valverde](https://github.com/sp-ricard-valverde))
+
+### Fixed
+
+- Only remove safe\_directory, if it exists [\#566](https://github.com/puppetlabs/puppetlabs-vcsrepo/pull/566) ([KoenDierckx](https://github.com/KoenDierckx))
+
 ## [v5.2.0](https://github.com/puppetlabs/puppetlabs-vcsrepo/tree/v5.2.0) (2022-06-30)
 
 [Full Changelog](https://github.com/puppetlabs/puppetlabs-vcsrepo/compare/v5.1.0...v5.2.0)
