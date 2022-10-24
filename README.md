@@ -207,31 +207,6 @@ vcsrepo { '/path/to/repo':
 }
 ~~~
 
-To clone a HTTP repo through a proxy
-
-The vcsrepo resource doesn't support a proxy configuration. However, you can configure it directly via git.
-Create the following `~/.gitconfig` file:
-
-~~~
-[http]
-  proxy = http://proxy.internal:8181
-~~~
-
-Git will now automatically use this proxy for all repositories that are cloned via http/https:
-
-~~~ puppet
-vcsrepo { '/path/to/repo':
-  ensure   => present,
-  provider => git,
-  source   => 'https://example.com/repo.git',
-  revision => '0c466b8a5a45f6cd7de82c08df2fb4ce1e920a31',
-  user     => 'someUser',
-}
-~~~
-
-You can find more information about the proxy configuration [here](https://gist.github.com/evantoli/f8c23a37eb3558ab8765).
-It's also possible to configure it on a per-repository level.
-
 To use a specific umask, set `umask` to the desired value (expressed as a string of octal numbers); note that changes to umask do not retroactively affect repo files created earlier under a different umask. This is currently only implemented for the `git` provider. If unspecified, this will use the umask of the puppet process itself.
 
 Example to set shared group access:
@@ -245,6 +220,48 @@ vcsrepo { '/path/to/repo':
   umask    => '0002'
 }
 ~~~
+
+#### Use HTTP or HTTPS proxies
+
+To use an HTTP or HTTPS proxy, set `http_proxy` to the proxy URL. This is currently only implemented for the `git` provider.
+
+`git` uses libcurl, so proxying of HTTPS repo URLs uses the CONNECT method, which works with either an HTTP or HTTPS proxy (since libcurl 7.52.0).
+
+Example to use an HTTPS proxy:
+
+~~~ puppet
+vcsrepo { '/path/to/repo':
+  ensure     => present,
+  provider   => git,
+  source     => 'https://example.com/repo.git',
+  http_proxy => 'https://proxy.example.com',
+  revision   => '0c466b8a5a45f6cd7de82c08df2fb4ce1e920a31',
+}
+~~~
+
+Proxies can also be specified as a hash, keyed by remote, in which case vcsrepo will use the specified proxy for each remote that is used as a source (see the `source` parameter). For any source that does not have an `http_proxy` defined, no proxy will be used.
+
+Example to use per-remote HTTPS proxies use a proxy for github but not for other remotes:
+
+~~~ puppet
+vcsrepo { '/path/to/repo':
+  ensure     => present,
+  provider   => git,
+  source     => {
+    origin => 'https://example.com/repo.git',
+    github => 'https://github.com/example/repo.git',
+  },
+  http_proxy => {
+    github => 'https://proxy2.example.com',
+  },
+  revision   => '0c466b8a5a45f6cd7de82c08df2fb4ce1e920a31',
+}
+~~~
+
+Specification of proxies this way affects remote operations performed by vcsrepo, but does _not_ persist the proxy settings within either the per-user git configuration or the per-repo git configuration. This means that manual operations like `git fetch` and  `git pull` within vcsrepo-managed working copies will not use proxies. If you need such operations to use proxies, then you can instead configure git on a per-user or per-repository basis. Example instructions for configuring git for a user are here:
+https://gist.github.com/evantoli/f8c23a37eb3558ab8765
+
+For per-repository configuration, use `--local` instead of `--global` for `git config` commands (or edit the `.git/config` file within each repo working copy).
 
 #### Use multiple remotes with a repository
 

@@ -70,6 +70,9 @@ Puppet::Type.newtype(:vcsrepo) do
   feature :umask,
           'The provider supports setting umask for repo operations'
 
+  feature :http_proxy,
+          'The provider supports retrieving repos via HTTP/HTTPS over an HTTP/HTTPS proxy'
+
   ensurable do
     desc 'Ensure the version control repository.'
     attr_accessor :latest
@@ -331,6 +334,26 @@ Puppet::Type.newtype(:vcsrepo) do
     munge do |value|
       raise Puppet::Error, _('The umask specification is invalid: %{value}') % { value: value.inspect } unless value.match?(%r{^0?[0-7]{1,4}$})
       value.to_i(8)
+    end
+  end
+
+  newparam :http_proxy, required_features: [:http_proxy] do
+    desc 'Sets the HTTP/HTTPS proxy for remote repo access'
+    regex = %r{^https?://\S+$}
+    validate do |value|
+      if value.is_a?(Hash)
+        value.each do |k, v|
+          unless v.match?(regex)
+            raise ArgumentError, "HTTP Proxy for #{k} must be an HTTP/HTTPS URL: #{v}"
+          end
+        end
+      else
+        unless value.match?(regex)
+          raise ArgumentError, "HTTP Proxy must be an HTTP/HTTPS URL: #{value}"
+        end
+      end
+      # Validation passed.
+      super(value)
     end
   end
 
