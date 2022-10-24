@@ -427,6 +427,11 @@ describe 'clones a remote repo' do
         groups => 'testuser-ssh',
         managehome => true,
       }
+      file { '/home/testuser-ssh/.ssh':
+        ensure => absent,
+        recurse => true,
+        force => true,
+      }
       MANIFEST
       apply_manifest(pp, catch_failures: true)
 
