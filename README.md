@@ -38,6 +38,7 @@ The vcsrepo module provides a single type with providers to support the followin
 * [Perforce](#perforce)
 * [Subversion](#subversion)
 
+**Note**: This module does not have the functionality to purge or delete local changes on agent run.
 **Note:** `git` is the only vcs provider officially [supported by Puppet Inc.](https://forge.puppet.com/supported)
 **Note:** Release v4.0.1 has been removed from the Puppet Forge and was officially re-released as version v5.0.0 as it contained a breaking change.
 Details available [here](https://puppetlabs.github.io/iac/team/status/developer/2021/06/04/status-update.html)
@@ -173,6 +174,8 @@ vcsrepo { '/path/to/repo':
 ~~~
 
 To keep the repository at the latest revision, set `ensure` to 'latest'.
+**Note**: `keep_local_changes` works by stashing local changes, switching the repo to the assigned revision and, finally, unstashing the local changes.
+It only comes into effect if the revision parameter is different from the local repo. This parameter DOES NOT delete/purge local changes by default on every run.
 
 **WARNING:** This overwrites any local changes to the repository.
 
