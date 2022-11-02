@@ -115,6 +115,63 @@ BRANCHES
       end
     end
 
+    context 'when with an ensure of present - when an http proxy is specified' do
+      it 'specifies the proxy parameter' do
+        resource[:http_proxy] = 'https://proxy.example.com'
+        expect(Dir).to receive(:chdir).with('/').once.and_yield
+        expect(Dir).to receive(:chdir).with('/tmp/test').at_least(:once).and_yield
+        expect(provider).to receive(:exec_git).with('-c', 'http.proxy=https://proxy.example.com', any_args)
+        expect(provider).to receive(:update_submodules)
+        expect(provider).to receive(:update_remote_url).with('origin', resource.value(:source)).and_return false
+        expect(provider).to receive(:exec_git).with('branch', '--no-color', '-a').and_return(branch_a_list(resource.value(:revision)))
+        expect(provider).to receive(:exec_git).with('checkout', '--force', resource.value(:revision))
+        provider.create
+      end
+    end
+
+    context 'when with an ensure of present - when multiple remotes are specified and http proxies are specified for all' do
+      it 'specifies the proxy parameter' do
+        resource[:source] = {
+          'origin' => 'https://foo.example.com/repo.git',
+          'alternate' => 'https://bar.example.com/repo.git',
+        }
+        resource[:http_proxy] = {
+          'origin' => 'https://proxy1.example.com',
+          'alternate' => 'https://proxy2.example.com',
+        }
+        expect(Dir).to receive(:chdir).with('/').once.and_yield
+        expect(Dir).to receive(:chdir).with('/tmp/test').at_least(:once).and_yield
+        expect(provider).to receive(:exec_git).with('-c', 'remote.alternate.proxy=https://proxy2.example.com', '-c', 'remote.origin.proxy=https://proxy1.example.com', any_args)
+        expect(provider).to receive(:update_submodules)
+        expect(provider).to receive(:update_remote_url).with('alternate', resource.value(:source)['alternate']).and_return false
+        expect(provider).to receive(:update_remote_url).with('origin', resource.value(:source)['origin']).and_return false
+        expect(provider).to receive(:exec_git).with('branch', '--no-color', '-a').and_return(branch_a_list(resource.value(:revision)))
+        expect(provider).to receive(:exec_git).with('checkout', '--force', resource.value(:revision))
+        provider.create
+      end
+    end
+
+    context 'when with an ensure of present - when multiple remotes are specified and http proxies are specified for some' do
+      it 'specifies the proxy parameter' do
+        resource[:source] = {
+          'origin' => 'https://foo.example.com/repo.git',
+          'alternate' => 'https://bar.example.com/repo.git',
+        }
+        resource[:http_proxy] = {
+          'alternate' => 'https://proxy2.example.com',
+        }
+        expect(Dir).to receive(:chdir).with('/').once.and_yield
+        expect(Dir).to receive(:chdir).with('/tmp/test').at_least(:once).and_yield
+        expect(provider).to receive(:exec_git).with('-c', 'remote.alternate.proxy=https://proxy2.example.com', any_args)
+        expect(provider).to receive(:update_submodules)
+        expect(provider).to receive(:update_remote_url).with('alternate', resource.value(:source)['alternate']).and_return false
+        expect(provider).to receive(:update_remote_url).with('origin', resource.value(:source)['origin']).and_return false
+        expect(provider).to receive(:exec_git).with('branch', '--no-color', '-a').and_return(branch_a_list(resource.value(:revision)))
+        expect(provider).to receive(:exec_git).with('checkout', '--force', resource.value(:revision))
+        provider.create
+      end
+    end
+
     context 'when with an ensure of bare - with revision' do
       it 'raises an error' do
         resource[:ensure] = :bare

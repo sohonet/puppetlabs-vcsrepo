@@ -7,7 +7,7 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
 
   has_features :bare_repositories, :reference_tracking, :ssh_identity, :multiple_remotes,
                :user, :depth, :branch, :submodules, :safe_directory, :hooks_allowed,
-               :umask
+               :umask, :http_proxy
 
   def create
     check_force
@@ -227,7 +227,7 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
 
     # If at least one remote was added or updated, then we must
     # call the 'git remote update' command
-    at_path { git_with_identity('remote', 'update') } if do_update == true
+    at_path { git_remote_action('remote', 'update') } if do_update == true
   end
 
   def update_references
@@ -237,8 +237,8 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
       fetch_tags_args.push('--force')
     end
     at_path do
-      git_with_identity('fetch', @resource.value(:remote))
-      git_with_identity(*fetch_tags_args, @resource.value(:remote))
+      git_remote_action('fetch', @resource.value(:remote))
+      git_remote_action(*fetch_tags_args, @resource.value(:remote))
       update_owner_and_excludes
     end
   end
@@ -399,7 +399,7 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
     if !working_copy_exists?
       args.push(source, path)
       Dir.chdir('/') do
-        git_with_identity(*args)
+        git_remote_action(*args)
       end
     else
       notice 'Repo has already been cloned'
@@ -655,6 +655,24 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
     (@resource.value(:owner) != @resource.value(:user)) && # user and owner should be different
       @resource.value(:safe_directory) && # safe_directory should be true
       !safe_directories.include?(@resource.value(:path)) # directory should not already be in the list
+  end
+
+  # @!visibility private
+  def git_remote_action(*args)
+    proxy = @resource.value(:http_proxy)
+    if proxy
+      if proxy.is_a?(Hash)
+        # Per-remote proxy support. This may or may not match the actual
+        # remotes in use, but specifying proxies for unused remotes is not
+        # harmful.
+        proxy.each do |remote, url|
+          args.unshift('-c', "remote.#{remote}.proxy=#{url}")
+        end
+      else
+        args.unshift('-c', "http.proxy=#{proxy}")
+      end
+    end
+    git_with_identity(*args)
   end
 
   # @!visibility private
