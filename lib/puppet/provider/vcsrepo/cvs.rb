@@ -18,7 +18,7 @@ Puppet::Type.type(:vcsrepo).provide(:cvs, parent: Puppet::Provider::Vcsrepo) do
     update_owner
   end
 
-  def exists?
+  def exist?
     working_copy_exists?
   end
 

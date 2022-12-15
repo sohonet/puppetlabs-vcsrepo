@@ -6,8 +6,7 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
   desc 'Supports Git repositories'
 
   has_features :bare_repositories, :reference_tracking, :ssh_identity, :multiple_remotes,
-               :user, :depth, :branch, :submodules, :safe_directory, :hooks_allowed,
-               :umask, :http_proxy
+               :user, :depth, :branch, :submodules, :safe_directory
 
   def create
     check_force
@@ -20,16 +19,10 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
       end
 
       init_repository
-      unless @resource.value(:skip_hooks).nil?
-        self.skip_hooks = @resource.value(:skip_hooks)
-      end
     else
       clone_repository(default_url, @resource.value(:path))
       update_remotes(@resource.value(:source))
       set_mirror if @resource.value(:ensure) == :mirror && @resource.value(:source).is_a?(Hash)
-      unless @resource.value(:skip_hooks).nil?
-        self.skip_hooks = @resource.value(:skip_hooks)
-      end
 
       if @resource.value(:revision)
         checkout
@@ -43,7 +36,7 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
   end
 
   def destroy
-    remove_safe_directory
+    remove_safe_directory if safe_directories.include?(@resource.value(:path))
     FileUtils.rm_rf(@resource.value(:path))
   end
 
@@ -168,7 +161,7 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
       git_with_identity('remote', 'add', remote_name, remote_url)
       true
 
-      # If remote exists, but URL doesn't match, update URL
+    # If remote exists, but URL doesn't match, update URL
     elsif !current.include? "remote.#{remote_name}.url=#{remote_url}"
       git_with_identity('remote', 'set-url', remote_name, remote_url)
       true
@@ -227,7 +220,7 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
 
     # If at least one remote was added or updated, then we must
     # call the 'git remote update' command
-    at_path { git_remote_action('remote', 'update') } if do_update == true
+    at_path { git_with_identity('remote', 'update') } if do_update == true
   end
 
   def update_references
@@ -237,8 +230,8 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
       fetch_tags_args.push('--force')
     end
     at_path do
-      git_remote_action('fetch', @resource.value(:remote))
-      git_remote_action(*fetch_tags_args, @resource.value(:remote))
+      git_with_identity('fetch', @resource.value(:remote))
+      git_with_identity(*fetch_tags_args, @resource.value(:remote))
       update_owner_and_excludes
     end
   end
@@ -289,10 +282,12 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
 
   def mirror?
     at_path do
-      git_with_identity('config', '--get-regexp', 'remote\..*\.mirror')
-      return true
-    rescue Puppet::ExecutionFailure
-      return false
+      begin
+        git_with_identity('config', '--get-regexp', 'remote\..*\.mirror')
+        return true
+      rescue Puppet::ExecutionFailure
+        return false
+      end
     end
   end
 
@@ -318,45 +313,11 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
         end
       else
         @resource.value(:source).each_key do |remote|
-          exec_git('config', '--unset', "remote.#{remote}.mirror")
-        rescue Puppet::ExecutionFailure
-          next
-        end
-      end
-    end
-  end
-
-  def skip_hooks
-    git_ver = git_version
-    config_args = ['config']
-    if Gem::Version.new(git_ver) >= Gem::Version.new('1.7.4')
-      config_args.push('--local')
-    end
-    at_path do
-      begin
-        d = git_with_identity(*config_args, '--get', 'core.hooksPath')
-      rescue Puppet::ExecutionFailure
-        return :false
-      end
-      return :true if d.chomp == '/dev/null'
-      :false
-    end
-  end
-
-  def skip_hooks=(desired)
-    git_ver = git_version
-    config_args = ['config']
-    if Gem::Version.new(git_ver) >= Gem::Version.new('1.7.4')
-      config_args.push('--local')
-    end
-    at_path do
-      if desired == :true
-        exec_git(*config_args, 'core.hooksPath', '/dev/null')
-      elsif desired == :false
-        begin
-          exec_git(*config_args, '--unset', 'core.hooksPath')
-        rescue Puppet::ExecutionFailure
-          next
+          begin
+            exec_git('config', '--unset', "remote.#{remote}.mirror")
+          rescue Puppet::ExecutionFailure
+            next
+          end
         end
       end
     end
@@ -399,7 +360,7 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
     if !working_copy_exists?
       args.push(source, path)
       Dir.chdir('/') do
-        git_remote_action(*args)
+        git_with_identity(*args)
       end
     else
       notice 'Repo has already been cloned'
@@ -643,8 +604,6 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
 
   # @!visibility private
   def remove_safe_directory
-    return unless safe_directories.include?(@resource.value(:path))
-
     notice("Removing '#{@resource.value(:path)}' from safe directory list")
     args = ['config', '--global', '--unset', 'safe.directory', @resource.value(:path)]
     git_with_identity(*args)
@@ -655,24 +614,6 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
     (@resource.value(:owner) != @resource.value(:user)) && # user and owner should be different
       @resource.value(:safe_directory) && # safe_directory should be true
       !safe_directories.include?(@resource.value(:path)) # directory should not already be in the list
-  end
-
-  # @!visibility private
-  def git_remote_action(*args)
-    proxy = @resource.value(:http_proxy)
-    if proxy
-      if proxy.is_a?(Hash)
-        # Per-remote proxy support. This may or may not match the actual
-        # remotes in use, but specifying proxies for unused remotes is not
-        # harmful.
-        proxy.each do |remote, url|
-          args.unshift('-c', "remote.#{remote}.proxy=#{url}")
-        end
-      else
-        args.unshift('-c', "http.proxy=#{proxy}")
-      end
-    end
-    git_with_identity(*args)
   end
 
   # @!visibility private
@@ -720,8 +661,6 @@ Puppet::Type.type(:vcsrepo).provide(:git, parent: Puppet::Provider::Vcsrepo) do
       exec_args[:custom_environment] = { 'HOME' => Etc.getpwnam(@resource.value(:user)).dir }
       exec_args[:uid] = @resource.value(:user)
     end
-    withumask do
-      Puppet::Util::Execution.execute([:git, args], **exec_args)
-    end
+    Puppet::Util::Execution.execute([:git, args], **exec_args)
   end
 end
